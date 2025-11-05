@@ -1,0 +1,6 @@
+old/
+*_login.py
+*_out.txt
+*.sqlite
+my_data.py
+__pycache__/

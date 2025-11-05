@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8"/>
+  <title>Trainingsplan</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.3/Sortable.min.js"></script>
+</head>
+<body>
+  <header class="app-header">
+    <h1>Wochenplan – Halbmarathon (radbasiert, knie-schonend)</h1>
+    <div class="actions">
+      <a class="btn" href="/init" title="DB zurücksetzen & Musterplan laden">Muster neu laden</a>
+      <button class="btn" id="btn-add-workout">+ Training</button>
+    </div>
+  </header>
+
+  <main class="grid-7">
+    {% for day_name in days %}
+    <section class="day-col">
+      <h2>{{ day_name }}</h2>
+
+      <!-- Dropzone for drag & drop -->
+      <div class="dropzone" data-day="{{ loop.index0 }}">
+
+        {% for w in plan[loop.index0] %}
+        <article class="card" data-id="{{ w.id }}">
+          <div class="card-top">
+            <span class="tag 
+              {{ 'strength' if w.wtype=='strength' else 
+                 'cardio' if w.wtype=='cardio' else 'other' }}">
+              {{ w.wtype }}
+            </span>
+
+            <div class="card-actions">
+              <button class="icon edit" data-id="{{ w.id }}" title="Bearbeiten">✎</button>
+              <button class="icon del" data-id="{{ w.id }}" title="Löschen">🗑</button>
+            </div>
+          </div>
+
+          <h3 class="title">{{ w.title }}</h3>
+
+          {% if w.wtype=='cardio' %}
+            <p class="meta">
+              Dauer: {{ w.duration_min or '—' }} min 
+              &nbsp;•&nbsp;
+              Intensität: {{ w.intensity or '—' }}
+            </p>
+
+          {% elif w.wtype=='strength' %}
+            {% if w.exercises %}
+              <ul class="ex-list">
+                {% for we in w.exercises %}
+                <li>
+                  {% if we.exercise.video_url %}
+                    <a href="{{ we.exercise.video_url }}" target="_blank">{{ we.exercise.name }}</a>
+                  {% else %}
+                    {{ we.exercise.name }}
+                  {% endif %}
+                  — {{ we.sets }}×{{ we.reps }}
+                </li>
+                {% endfor %}
+              </ul>
+            {% else %}
+              <p class="meta">Übungen noch auswählen…</p>
+            {% endif %}
+          {% endif %}
+
+          {% if w.notes %}
+            <p class="notes">{{ w.notes }}</p>
+          {% endif %}
+        </article>
+        {% endfor %}
+
+      </div>
+    </section>
+    {% endfor %}
+  </main>
+
+  <!-- AI Agent Footer (disabled for now) -->
+  <footer class="chat-placeholder">
+    <div class="chat-inner">
+      <div class="label">AI-Agent (später verfügbar):</div>
+      <input type="text" placeholder="Hier später Trainingsplan per Sprache anpassen..." disabled/>
+      <button disabled>Absenden</button>
+    </div>
+  </footer>
+
+  <!-- Workout Modal -->
+  <dialog id="workout-modal">
+    <form method="dialog" id="workout-form">
+      <h3 id="modal-title">Training bearbeiten</h3>
+      <input type="hidden" id="w-id"/>
+
+      <label>Tag
+        <select id="w-day">
+          <option value="0">Montag</option>
+          <option value="1">Dienstag</option>
+          <option value="2">Mittwoch</option>
+          <option value="3">Donnerstag</option>
+          <option value="4">Freitag</option>
+          <option value="5">Samstag</option>
+          <option value="6">Sonntag</option>
+        </select>
+      </label>
+
+      <label>Typ
+        <select id="w-type">
+          <option value="cardio">Cardio</option>
+          <option value="strength">Kraft</option>
+          <option value="other">Sonstiges</option>
+        </select>
+      </label>
+
+      <label>Titel
+        <input id="w-title" type="text" placeholder="z. B. Rad locker / Run-Walk / Kraft & Hüfte"/>
+      </label>
+
+      <div class="row two" id="cardio-row">
+        <label>Dauer (min)
+          <input id="w-duration" type="number" min="0" step="5"/>
+        </label>
+        <label>Intensität
+          <input id="w-intensity" type="text" placeholder="z. B. RPE 3, locker"/>
+        </label>
+      </div>
+
+      <div id="strength-row">
+        <div class="strength-row-header">
+          <span>Übungen & Sätze/Wdh:</span>
+          <button type="button" class="btn small" id="btn-add-ex">+ Übung</button>
+        </div>
+        <div id="strength-list"></div>
+
+        <template id="ex-item-tpl">
+          <div class="ex-item">
+            <select class="ex-select"></select>
+            <input class="ex-sets" type="number" min="1" value="3">×
+            <input class="ex-reps" type="number" min="1" value="12">
+            <button type="button" class="icon ex-del">🗑</button>
+          </div>
+        </template>
+      </div>
+
+      <label>Notizen
+        <textarea id="w-notes" rows="3"></textarea>
+      </label>
+
+      <menu>
+        <button value="cancel">Abbrechen</button>
+        <button value="save" class="primary">Speichern</button>
+      </menu>
+    </form>
+  </dialog>
+
+  <script>
+    const EXERCISES = {{ exercises|tojson }};
+  </script>
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
