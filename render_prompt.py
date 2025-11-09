@@ -146,7 +146,6 @@ sleep = get_sleep_last_nd(api, ndays=7)
 week_label = f"KW{datetime.now().isocalendar().week:02d}"
 plan_days = build_plan_lines()
 
-ctx = base_ctx.copy()
 ctx["meta"]["now_iso"] = datetime.now().isoformat()
 
 ctx["plan"] = {
