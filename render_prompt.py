@@ -138,7 +138,7 @@ def build_plan_lines() -> list[str]:
 
 # ---------------- Garmin fetch (unchanged) ----------------
 api = get_api()
-acts = get_recent_activities(api, limit=15)
+acts = get_recent_activities(api, limit=30)
 vo2 = get_vo2max_today(api)
 sleep = get_sleep_last_nd(api, ndays=7)
 
